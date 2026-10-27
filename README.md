@@ -1,8 +1,8 @@
 # FleetCore API - Sistema de Gestión de Mantenimiento de Flota
 
 **Prueba de Desempeño – Módulo 6.2 NestJS**  
-**Coder:** Riwi Coder  
-**Clan:** Coder Clan  
+**Coder:** Riwi Yesid Palacio  
+**Clan:** Coder Clan Nodejs AM 
 
 ---
 
