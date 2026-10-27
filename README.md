@@ -214,7 +214,7 @@ curl -H "x-api-key: demo-key-partner-1" http://localhost:3001/api/integrations/v
 
 ---
 
-## 10. Postman Collection & SQL Dump
+## 10. Deliverables & SQL Dump
 
-- **Postman Collection**: Import [`postman_collection.json`](./postman_collection.json) to execute functional test scenarios with pre-configured requests and token scripts.
+- **Swagger Evidence**: Functional testing of core scenarios is verified directly via the interactive Swagger UI at `/api/docs`.
 - **Database Dump**: Complete PostgreSQL schema and seed data export available in [`fleetcore_dump.sql`](./fleetcore_dump.sql).
