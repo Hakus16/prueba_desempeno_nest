@@ -216,5 +216,14 @@ curl -H "x-api-key: demo-key-partner-1" http://localhost:3001/api/integrations/v
 
 ## 10. Deliverables & SQL Dump
 
-- **Swagger Evidence**: Functional testing of core scenarios is verified directly via the interactive Swagger UI at `/api/docs`.
 - **Database Dump**: Complete PostgreSQL schema and seed data export available in [`fleetcore_dump.sql`](./fleetcore_dump.sql).
+- **Swagger Evidence Screenshots** (available in [`evidencias/`](./evidencias/)):
+  - [`01-swagger-overview.png`](./evidencias/01-swagger-overview.png): General overview of OpenAPI documentation and Bearer Auth.
+  - [`02-auth-token-expired-401.png`](./evidencias/02-auth-token-expired-401.png): Verification of 401 Unauthorized token expiration handling.
+  - [`03-vehicles-list-200.png`](./evidencias/03-vehicles-list-200.png): Vehicle listing with status filtering and availability.
+  - [`04-vehicle-not-found-404.png`](./evidencias/04-vehicle-not-found-404.png): Standardized 404 Not Found error format.
+  - [`05-vehicle-find-by-id-200.png`](./evidencias/05-vehicle-find-by-id-200.png): Vehicle details with maintenance relations.
+  - [`06-mechanics-list-200.png`](./evidencias/06-mechanics-list-200.png): Mechanics listing with associated technician user accounts.
+  - [`07-mechanic-find-by-id-200.png`](./evidencias/07-mechanic-find-by-id-200.png): Individual mechanic record by ID.
+  - [`08-workshops-list-200.png`](./evidencias/08-workshops-list-200.png): Workshops listing with capacities and active/inactive statuses.
+  - [`09-maintenances-list-200.png`](./evidencias/09-maintenances-list-200.png): Maintenance records with vehicle relations and in-progress status.
