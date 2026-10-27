@@ -1,39 +1,76 @@
-# FleetCore API - Sistema de Gestión de Mantenimiento de Flota
+# FleetCore API - Fleet Maintenance Management System
 
-**Prueba de Desempeño – Módulo 6.2 NestJS**  
+**Performance Assessment – Module 6.2 NestJS**  
 **Coder:** Riwi Yesid Palacio  
-**Clan:** Coder Clan Nodejs AM 
+**Clan:** Coder Clan Nodejs AM  
 
 ---
 
-## 1. Descripción del Proyecto
+## 1. Project Overview
 
-FleetCore es una solución backend construida con **NestJS**, **TypeScript**, **TypeORM** y **PostgreSQL**, diseñada para administrar el ciclo de vida completo de los mantenimientos de una flota vehicular (preventivos y correctivos), gestionando la disponibilidad de los vehículos, la asignación de mecánicos y talleres, y evitando conflictos de programación y solapamiento de horarios.
-
----
-
-## 2. Requisitos Previos
-
-- **Node.js**: v20.x o superior
-- **NPM**: v10.x o superior
-- **PostgreSQL**: v15+ (o Docker / Docker Compose instalado)
-- **Docker & Docker Compose** (opcional para despliegue automatizado)
+FleetCore is an enterprise-grade REST API built with **NestJS**, **TypeScript**, **TypeORM**, and **PostgreSQL**. It is designed to manage the full lifecycle of vehicle fleet maintenance (preventive and corrective), tracking vehicle availability, assigning mechanics and workshops, and enforcing strict scheduling and overlapping prevention rules.
 
 ---
 
-## 3. Variables de Entorno
+## 2. Layered Architecture (Clean Architecture)
 
-Crear un archivo `.env` en la raíz del proyecto basándose en `.env.example`:
+The project adheres to a strict **Layered Architecture** pattern across all domain modules:
+
+```
+src/
+├── common/                  # Cross-cutting concerns (Guards, Decorators, Filters, Interceptors, Enums)
+├── config/                  # Configuration & TypeORM factory
+├── database/                # Idempotent database seeds
+└── modules/
+    ├── auth/                # Authentication & JWT issuance
+    ├── users/               # User management
+    ├── vehicles/            # Fleet vehicles
+    ├── mechanics/           # Mechanics & technician assignment
+    ├── workshops/           # Service workshops
+    ├── maintenances/        # Maintenance lifecycle & state machine
+    └── integrations/        # External partner integration via x-api-key
+```
+
+### Flow of Responsibilities per Layer:
+1. **Presentation Layer (`controllers/` & `dto/`)**:
+   - Handles HTTP requests and responses.
+   - Applies security guards (`JwtAuthGuard`, `RolesGuard`, `ApiKeyGuard`).
+   - Validates incoming payloads using `ValidationPipe` and `class-validator` DTOs.
+   - Formats success responses using `TransformInterceptor`.
+2. **Business / Application Layer (`services/`)**:
+   - Contains core business logic and domain rules.
+   - Handles maintenance state transitions, schedule conflict detection, and odometer checks.
+   - Completely decoupled from direct database drivers or HTTP specifics.
+3. **Data Access / Persistence Layer (`repositories/`)**:
+   - Encapsulates database queries (`find`, `findOne`, `softDelete`, `save`).
+   - Manages atomic transactions using TypeORM (`executeTransaction`).
+4. **Domain / Model Layer (`entities/` & `constants/`)**:
+   - Defines database entities, foreign keys, constraints, and status enums.
+
+---
+
+## 3. Prerequisites
+
+- **Node.js**: v20.x or higher
+- **NPM**: v10.x or higher
+- **PostgreSQL**: v15+ (or Docker / Docker Compose)
+- **Docker & Docker Compose** (for containerized deployment)
+
+---
+
+## 4. Environment Variables
+
+Create a `.env` file in the project root based on `.env.example`:
 
 ```bash
 cp .env.example .env
 ```
 
-Contenido de `.env`:
+Default `.env` configuration:
 ```env
-PORT=3000
+PORT=3001
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=5433
 DB_USERNAME=postgres
 DB_PASSWORD=postgres
 DB_NAME=fleetcore
@@ -44,104 +81,103 @@ API_KEYS=demo-key-partner-1,demo-key-partner-2
 
 ---
 
-## 4. Instalación y Ejecución
+## 5. Installation and Execution
 
-### Opción A: Despliegue con Docker y Docker Compose (Recomendado)
+### Option A: Deployment with Docker Compose (Recommended)
 
-Levanta la base de datos PostgreSQL y la API en contenedores aislados con red interna y volumen persistente:
+Spins up PostgreSQL and the NestJS API in isolated containers connected via an internal bridge network with data volume persistence:
 
 ```bash
+# Build images and start containers in background
 docker compose up --build -d
-```
 
-Para poblar la base de datos dentro del contenedor:
-```bash
+# Populate the database with idempotent seeders
 docker compose exec api npm run seed
 ```
 
-Para detener los servicios:
+To stop containers:
 ```bash
 docker compose down
 ```
 
 ---
 
-### Opción B: Ejecución Local
+### Option B: Local Execution
 
-1. Instalar dependencias:
+1. Install project dependencies:
    ```bash
    npm install
    ```
 
-2. Asegurarse de tener creada la base de datos `fleetcore` en PostgreSQL local:
+2. Ensure the PostgreSQL database exists locally:
    ```sql
    CREATE DATABASE fleetcore;
    ```
 
-3. Ejecutar los seeders iniciales:
+3. Run the initial database seeders:
    ```bash
    npm run seed
    ```
 
-4. Iniciar la aplicación en modo desarrollo:
+4. Start the application in development mode:
    ```bash
    npm run start:dev
    ```
 
 ---
 
-## 5. Documentación Swagger
+## 6. Swagger API Documentation
 
-Una vez iniciado el servidor, la documentación interactiva de OpenAPI / Swagger se encuentra disponible en:
+Once the server is running, the interactive OpenAPI / Swagger documentation is available at:
 
- **URL:** [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
+ **URL:** [http://localhost:3001/api/docs](http://localhost:3001/api/docs) *(or port `3000` depending on your environment)*
 
-Permite autenticar peticiones con:
-- **Bearer Token (JWT)**: Copiar el `accessToken` obtenido en `/api/auth/login` y pegarlo en el botón "Authorize".
-- **x-api-key**: Encabezado requerido para los endpoints de `/api/integrations/*`.
+### Authentication in Swagger:
+- **Bearer Token (JWT)**: Log in via `POST /api/auth/login`, copy the `accessToken`, and paste it into the **Authorize** dialog.
+- **x-api-key**: Enter `demo-key-partner-1` in the header field to test `/api/integrations/*` routes.
 
 ---
 
-## 6. Credenciales de Prueba (Seeders)
+## 7. Test Credentials (Seed Data)
 
-Los seeders generan los siguientes usuarios y registros de prueba listos para usar:
+The seeders populate the database idempotently with the following preconfigured records:
 
-### A. Usuarios y Autenticación
-| Rol | Correo Electrónico | Contraseña | Notas |
+### A. Users & Authentication
+| Role | Email | Password | Description |
 | :--- | :--- | :--- | :--- |
-| **ADMIN** | `admin@fleetcore.com` | `FleetCore2026*` | Acceso a gestión global |
-| **TECHNICIAN** | `carlos.perez@fleetcore.com` | `FleetCore2026*` | Vinculado al mecánico Carlos Pérez |
-| **TECHNICIAN** | `laura.gomez@fleetcore.com` | `FleetCore2026*` | Vinculada al mecánico Laura Gómez |
+| **ADMIN** | `admin@fleetcore.com` | `FleetCore2026*` | Full system administration |
+| **TECHNICIAN** | `carlos.perez@fleetcore.com` | `FleetCore2026*` | Linked to mechanic Carlos Pérez |
+| **TECHNICIAN** | `laura.gomez@fleetcore.com` | `FleetCore2026*` | Linked to mechanic Laura Gómez |
 
-### B. Mecánicos Registrados
-- **Carlos Pérez** (`carlos.perez@fleetcore.com`): Estado **Activo**, vinculado a usuario técnico.
-- **Laura Gómez** (`laura.gomez@fleetcore.com`): Estado **Activo**, vinculada a usuario técnico.
-- **Roberto Díaz** (`roberto.diaz@fleetcore.com`): Estado **Inactivo** (permite probar rechazo de asignación).
+### B. Mechanics
+- **Carlos Pérez** (`carlos.perez@fleetcore.com`): Status **Active**, linked to user account.
+- **Laura Gómez** (`laura.gomez@fleetcore.com`): Status **Active**, linked to user account.
+- **Roberto Díaz** (`roberto.diaz@fleetcore.com`): Status **Inactive** (used to test assignment rejection).
 
-### C. Talleres Registrados
-- **Taller Norte Principal**: Estado **Activo**.
-- **Taller Sur Auxiliar**: Estado **Inactivo** (permite probar rechazo de asignación).
+### C. Workshops
+- **Taller Norte Principal**: Status **Active**.
+- **Taller Sur Auxiliar**: Status **Inactive** (used to test assignment rejection).
 
-### D. Vehículos Registrados
-- `ABC123`: Estado **AVAILABLE** (con historial previo de mantenimiento completado).
-- `XYZ789`: Estado **AVAILABLE** (listo para nueva asignación).
-- `DEF456`: Estado **IN_MAINTENANCE** (asociado al mantenimiento activo `IN_PROGRESS`).
-- `GHI999`: Estado **INACTIVE** (permite validar bloqueo de nuevas asignaciones).
+### D. Vehicles
+- `ABC123`: Status **AVAILABLE** (includes completed historical maintenance record).
+- `XYZ789`: Status **AVAILABLE** (ready for new maintenance scheduling).
+- `DEF456`: Status **IN_MAINTENANCE** (associated with active `IN_PROGRESS` maintenance).
+- `GHI999`: Status **INACTIVE** (used to test inactive vehicle assignment rejection).
 
-### E. API Keys para Integraciones Externas
+### E. API Keys for External Integrations
 - `demo-key-partner-1`
 - `demo-key-partner-2`
 
-Endpoint de prueba:
+Example testing with cURL:
 ```bash
-curl -H "x-api-key: demo-key-partner-1" http://localhost:3000/api/integrations/vehicles/ABC123/history
+curl -H "x-api-key: demo-key-partner-1" http://localhost:3001/api/integrations/vehicles/ABC123/history
 ```
 
 ---
 
-## 7. Estructura de Respuestas y Manejo de Errores
+## 8. Standard Response and Error Format
 
-### Respuesta Exitosa Unificada (TransformInterceptor):
+### Unified Success Response (`TransformInterceptor`):
 ```json
 {
   "success": true,
@@ -151,7 +187,7 @@ curl -H "x-api-key: demo-key-partner-1" http://localhost:3000/api/integrations/v
 }
 ```
 
-### Respuesta de Error Unificada (HttpExceptionFilter):
+### Unified Error Response (`HttpExceptionFilter`):
 ```json
 {
   "success": false,
@@ -164,14 +200,21 @@ curl -H "x-api-key: demo-key-partner-1" http://localhost:3000/api/integrations/v
 
 ---
 
-## 8. Reglas de Negocio Implementadas
+## 9. Implemented Business Rules
 
-1. **Unicidad de Placas:** No se permiten dos vehículos con la misma placa.
-2. **Vehículos Inactivos:** Un vehículo en estado `INACTIVE` no puede asociarse a nuevos mantenimientos.
-3. **Mantenimiento Activo Exclusivo por Vehículo:** Un vehículo no puede tener más de un mantenimiento activo (`SCHEDULED` o `IN_PROGRESS`) a la vez.
-4. **Validación de Odómetro:** El kilometraje inicial de un mantenimiento no puede ser inferior al actual del vehículo.
-5. **Solapamiento de Horarios de Mecánicos:** Ningún mecánico puede tener dos mantenimientos activos cuyos intervalos de fecha/hora se solapen, sin importar el taller.
-6. **Transición Atómica de Estados (Transacciones TypeORM):**
-   - Transición a `IN_PROGRESS` cambia automáticamente el vehículo a `IN_MAINTENANCE`.
-   - Transición a `COMPLETED` exige información de cierre (trabajo realizado, costo final, fecha fin, kilometraje final) y regresa el vehículo a `AVAILABLE` con kilometraje actualizado.
-   - Estados terminales `COMPLETED` y `CANCELLED` no pueden revertirse ni reactivarse inválidamente.
+1. **Plate Uniqueness**: Duplicate license plates are strictly prevented with database and application-level checks.
+2. **Inactive Vehicles**: Vehicles with `INACTIVE` status or soft-deleted cannot be scheduled for maintenance.
+3. **Single Active Maintenance per Vehicle**: A vehicle cannot have more than one concurrent active maintenance (`SCHEDULED` or `IN_PROGRESS`).
+4. **Odometer Validation**: Maintenance entry mileage cannot be lower than the vehicle's current odometer reading.
+5. **Mechanic Schedule Overlap Prevention**: A mechanic cannot be assigned to overlapping maintenance schedules across any workshop.
+6. **Atomic State Transitions (TypeORM Transactions)**:
+   - Transitioning to `IN_PROGRESS` automatically marks the vehicle as `IN_MAINTENANCE`.
+   - Transitioning to `COMPLETED` requires closing data (work description, final cost, completion date, final mileage), updates the vehicle odometer, and sets its status back to `AVAILABLE`.
+   - Terminal states `COMPLETED` and `CANCELLED` cannot be reversed or transitioned to unauthorized states.
+
+---
+
+## 10. Postman Collection & SQL Dump
+
+- **Postman Collection**: Import [`postman_collection.json`](./postman_collection.json) to execute functional test scenarios with pre-configured requests and token scripts.
+- **Database Dump**: Complete PostgreSQL schema and seed data export available in [`fleetcore_dump.sql`](./fleetcore_dump.sql).
