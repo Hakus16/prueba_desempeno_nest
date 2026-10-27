@@ -1,0 +1,210 @@
+{
+  "info": {
+    "name": "FleetCore API - Colección de Pruebas",
+    "description": "Colección completa para pruebas funcionales de FleetCore API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api", "type": "string" },
+    { "key": "adminToken", "value": "", "type": "string" },
+    { "key": "techToken", "value": "", "type": "string" },
+    { "key": "apiKey", "value": "demo-key-partner-1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Autenticación",
+      "item": [
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.accessToken) {",
+                  "    pm.collectionVariables.set('adminToken', json.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@fleetcore.com\",\n  \"password\": \"FleetCore2026*\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login Técnico Carlos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.accessToken) {",
+                  "    pm.collectionVariables.set('techToken', json.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"carlos.perez@fleetcore.com\",\n  \"password\": \"FleetCore2026*\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Vehículos",
+      "item": [
+        {
+          "name": "Listar Vehículos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/vehicles", "host": ["{{baseUrl}}"], "path": ["vehicles"] }
+          }
+        },
+        {
+          "name": "Consultar por Placa",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/vehicles/ABC123", "host": ["{{baseUrl}}"], "path": ["vehicles", "ABC123"] }
+          }
+        },
+        {
+          "name": "Crear Vehículo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plate\": \"MNP456\",\n  \"brand\": \"Volvo\",\n  \"model\": \"FH16\",\n  \"year\": 2023,\n  \"mileage\": 15000\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/vehicles", "host": ["{{baseUrl}}"], "path": ["vehicles"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Mecánicos y Talleres",
+      "item": [
+        {
+          "name": "Listar Mecánicos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/mechanics", "host": ["{{baseUrl}}"], "path": ["mechanics"] }
+          }
+        },
+        {
+          "name": "Listar Talleres Activos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/workshops/active", "host": ["{{baseUrl}}"], "path": ["workshops", "active"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Mantenimientos",
+      "item": [
+        {
+          "name": "Listar Mantenimientos Activos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/maintenances/active", "host": ["{{baseUrl}}"], "path": ["maintenances", "active"] }
+          }
+        },
+        {
+          "name": "Mantenimientos Asignados a Mí (Técnico)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{techToken}}" }],
+            "url": { "raw": "{{baseUrl}}/maintenances/my-assigned", "host": ["{{baseUrl}}"], "path": ["maintenances", "my-assigned"] }
+          }
+        },
+        {
+          "name": "Crear Mantenimiento (Preventivo)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"PREVENTIVE\",\n  \"description\": \"Revisión y mantenimiento preventivo programado\",\n  \"initialMileage\": 62000,\n  \"scheduledDate\": \"2026-11-01T08:00:00.000Z\",\n  \"estimatedEndDate\": \"2026-11-01T11:00:00.000Z\",\n  \"vehicleId\": 2,\n  \"mechanicId\": 2,\n  \"workshopId\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/maintenances", "host": ["{{baseUrl}}"], "path": ["maintenances"] }
+          }
+        },
+        {
+          "name": "Cambiar a IN_PROGRESS",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/maintenances/2/status", "host": ["{{baseUrl}}"], "path": ["maintenances", "2", "status"] }
+          }
+        },
+        {
+          "name": "Completar Mantenimiento (COMPLETED)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\",\n  \"workDone\": \"Cambio completo de pastillas, líquido de frenos y purgado\",\n  \"finalCost\": 420000,\n  \"completedAt\": \"2026-11-01T10:45:00.000Z\",\n  \"finalMileage\": 62050\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/maintenances/2/status", "host": ["{{baseUrl}}"], "path": ["maintenances", "2", "status"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Integraciones Externas (x-api-key)",
+      "item": [
+        {
+          "name": "Consultar Historial de Vehículo por x-api-key",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/integrations/vehicles/ABC123/history", "host": ["{{baseUrl}}"], "path": ["integrations", "vehicles", "ABC123", "history"] }
+          }
+        }
+      ]
+    }
+  ]
+}
